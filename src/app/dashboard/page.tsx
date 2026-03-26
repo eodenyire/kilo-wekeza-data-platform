@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ToolLayout } from "@/components/ui/ToolNav";
-import { StatCard, StatusBadge, SeverityBadge } from "@/components/ui/Cards";
 
 interface DashboardData {
   lineage: { assetCount: number; edgeCount: number; pipelineFailures: number };
@@ -16,110 +15,117 @@ interface DashboardData {
   pipelines: { activePipelines: number; recentExecutions: number };
 }
 
+async function safeFetch(url: string) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.success ? json.data : null;
+  } catch (_e) {
+    return null;
+  }
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchAll() {
-      try {
-        const [lineage, quality, fraud, drift, executive, contracts, optimizer, pipeline] =
-          await Promise.all([
-            fetch("/api/lineage").then((r) => r.json()),
-            fetch("/api/quality").then((r) => r.json()),
-            fetch("/api/fraud").then((r) => r.json()),
-            fetch("/api/drift").then((r) => r.json()),
-            fetch("/api/executive").then((r) => r.json()),
-            fetch("/api/contracts").then((r) => r.json()),
-            fetch("/api/optimizer").then((r) => r.json()),
-            fetch("/api/pipeline").then((r) => r.json()),
-          ]);
+      const [lineage, quality, fraud, drift, executive, contracts, optimizer, pipeline] =
+        await Promise.all([
+          safeFetch("/api/lineage"),
+          safeFetch("/api/quality"),
+          safeFetch("/api/fraud"),
+          safeFetch("/api/drift"),
+          safeFetch("/api/executive"),
+          safeFetch("/api/contracts"),
+          safeFetch("/api/optimizer"),
+          safeFetch("/api/pipeline"),
+        ]);
 
-        const trustScores = quality.data?.scores || [];
-        const avgTrust =
-          trustScores.length > 0
-            ? Math.round(
-                trustScores.reduce(
-                  (acc: number, s: { overallScore: number }) =>
-                    acc + s.overallScore,
-                  0
-                ) / trustScores.length
-              )
-            : 0;
+      const trustScores = quality?.scores || [];
+      const avgTrust =
+        trustScores.length > 0
+          ? Math.round(
+              trustScores.reduce(
+                (acc: number, s: { overallScore: number }) =>
+                  acc + s.overallScore,
+                0
+              ) / trustScores.length
+            )
+          : 0;
 
-        setData({
-          lineage: {
-            assetCount: lineage.data?.assets?.length || 0,
-            edgeCount: lineage.data?.edges?.length || 0,
-            pipelineFailures:
-              lineage.data?.recentRuns?.filter(
-                (r: { status: string }) => r.status === "failed"
-              ).length || 0,
-          },
-          quality: {
-            avgTrustScore: avgTrust,
-            incidents:
-              quality.data?.incidents?.filter(
-                (i: { status: string }) => i.status !== "resolved"
-              ).length || 0,
-          },
-          fraud: {
-            openAlerts:
-              fraud.data?.alerts?.filter(
-                (a: { status: string }) => a.status === "open"
-              ).length || 0,
-            fraudDetected: fraud.data?.stats?.fraudDetected || 0,
-          },
-          drift: {
-            openDrifts:
-              drift.data?.drifts?.filter(
-                (d: { status: string }) => d.status === "open"
-              ).length || 0,
-            modelsTracked: drift.data?.models?.length || 0,
-          },
-          executive: {
-            pendingRecommendations:
-              executive.data?.recommendations?.filter(
-                (r: { status: string }) => r.status === "pending"
-              ).length || 0,
-            criticalAlerts:
-              executive.data?.alerts?.filter(
-                (a: { severity: string }) => a.severity === "critical"
-              ).length || 0,
-          },
-          contracts: {
-            activeContracts:
-              contracts.data?.contracts?.filter(
-                (c: { status: string }) => c.status === "active"
-              ).length || 0,
-            violations:
-              contracts.data?.validations?.filter(
-                (v: { status: string }) => v.status === "fail"
-              ).length || 0,
-          },
-          optimizer: {
-            pendingSuggestions:
-              optimizer.data?.suggestions?.filter(
-                (s: { status: string }) => s.status === "pending"
-              ).length || 0,
-            appliedSuggestions:
-              optimizer.data?.suggestions?.filter(
-                (s: { status: string }) => s.status === "applied"
-              ).length || 0,
-          },
-          pipelines: {
-            activePipelines:
-              pipeline.data?.pipelines?.filter(
-                (p: { status: string }) => p.status === "active"
-              ).length || 0,
-            recentExecutions: pipeline.data?.executions?.length || 0,
-          },
-        });
-      } catch (err) {
-        console.error("Failed to load dashboard:", err);
-      } finally {
-        setLoading(false);
-      }
+      setData({
+        lineage: {
+          assetCount: lineage?.assets?.length || 0,
+          edgeCount: lineage?.edges?.length || 0,
+          pipelineFailures:
+            lineage?.recentRuns?.filter(
+              (r: { status: string }) => r.status === "failed"
+            ).length || 0,
+        },
+        quality: {
+          avgTrustScore: avgTrust,
+          incidents:
+            quality?.incidents?.filter(
+              (i: { status: string }) => i.status !== "resolved"
+            ).length || 0,
+        },
+        fraud: {
+          openAlerts:
+            fraud?.alerts?.filter(
+              (a: { status: string }) => a.status === "open"
+            ).length || 0,
+          fraudDetected: fraud?.stats?.fraudDetected || 0,
+        },
+        drift: {
+          openDrifts:
+            drift?.drifts?.filter(
+              (d: { status: string }) => d.status === "open"
+            ).length || 0,
+          modelsTracked: drift?.models?.length || 0,
+        },
+        executive: {
+          pendingRecommendations:
+            executive?.recommendations?.filter(
+              (r: { status: string }) => r.status === "pending"
+            ).length || 0,
+          criticalAlerts:
+            executive?.alerts?.filter(
+              (a: { severity: string }) => a.severity === "critical"
+            ).length || 0,
+        },
+        contracts: {
+          activeContracts:
+            contracts?.contracts?.filter(
+              (c: { status: string }) => c.status === "active"
+            ).length || 0,
+          violations:
+            contracts?.validations?.filter(
+              (v: { status: string }) => v.status === "fail"
+            ).length || 0,
+        },
+        optimizer: {
+          pendingSuggestions:
+            optimizer?.suggestions?.filter(
+              (s: { status: string }) => s.status === "pending"
+            ).length || 0,
+          appliedSuggestions:
+            optimizer?.suggestions?.filter(
+              (s: { status: string }) => s.status === "applied"
+            ).length || 0,
+        },
+        pipelines: {
+          activePipelines:
+            pipeline?.pipelines?.filter(
+              (p: { status: string }) => p.status === "active"
+            ).length || 0,
+          recentExecutions: pipeline?.executions?.length || 0,
+        },
+      });
+
+      setLoading(false);
     }
     fetchAll();
   }, []);
@@ -138,26 +144,15 @@ export default function DashboardPage() {
     {
       href: "/tool/lineage",
       name: "Data Lineage & Observability",
-      icon: "🔗",
+      icon: "\u{1F517}",
       stats: data
         ? [
-            {
-              label: "Data Assets",
-              value: data.lineage.assetCount,
-              color: "text-blue-400",
-            },
-            {
-              label: "Lineage Edges",
-              value: data.lineage.edgeCount,
-              color: "text-cyan-400",
-            },
+            { label: "Data Assets", value: data.lineage.assetCount, color: "text-blue-400" },
+            { label: "Lineage Edges", value: data.lineage.edgeCount, color: "text-cyan-400" },
             {
               label: "Pipeline Failures",
               value: data.lineage.pipelineFailures,
-              color:
-                data.lineage.pipelineFailures > 0
-                  ? "text-red-400"
-                  : "text-emerald-400",
+              color: data.lineage.pipelineFailures > 0 ? "text-red-400" : "text-emerald-400",
             },
           ]
         : [],
@@ -165,24 +160,18 @@ export default function DashboardPage() {
     {
       href: "/tool/quality",
       name: "Data Quality & Trust",
-      icon: "📊",
+      icon: "\u{1F4CA}",
       stats: data
         ? [
             {
               label: "Avg Trust Score",
               value: `${data.quality.avgTrustScore}/100`,
-              color:
-                data.quality.avgTrustScore >= 80
-                  ? "text-emerald-400"
-                  : "text-yellow-400",
+              color: data.quality.avgTrustScore >= 80 ? "text-emerald-400" : "text-yellow-400",
             },
             {
               label: "Open Incidents",
               value: data.quality.incidents,
-              color:
-                data.quality.incidents > 0
-                  ? "text-orange-400"
-                  : "text-emerald-400",
+              color: data.quality.incidents > 0 ? "text-orange-400" : "text-emerald-400",
             },
           ]
         : [],
@@ -190,43 +179,29 @@ export default function DashboardPage() {
     {
       href: "/tool/fraud",
       name: "Fraud & Risk Analytics",
-      icon: "🔍",
+      icon: "\u{1F50D}",
       stats: data
         ? [
             {
               label: "Open Alerts",
               value: data.fraud.openAlerts,
-              color:
-                data.fraud.openAlerts > 0
-                  ? "text-red-400"
-                  : "text-emerald-400",
+              color: data.fraud.openAlerts > 0 ? "text-red-400" : "text-emerald-400",
             },
-            {
-              label: "Fraud Detected",
-              value: data.fraud.fraudDetected,
-              color: "text-orange-400",
-            },
+            { label: "Fraud Detected", value: data.fraud.fraudDetected, color: "text-orange-400" },
           ]
         : [],
     },
     {
       href: "/tool/drift",
       name: "ML Drift Monitor",
-      icon: "📡",
+      icon: "\u{1F4E1}",
       stats: data
         ? [
-            {
-              label: "Models Tracked",
-              value: data.drift.modelsTracked,
-              color: "text-blue-400",
-            },
+            { label: "Models Tracked", value: data.drift.modelsTracked, color: "text-blue-400" },
             {
               label: "Open Drifts",
               value: data.drift.openDrifts,
-              color:
-                data.drift.openDrifts > 0
-                  ? "text-red-400"
-                  : "text-emerald-400",
+              color: data.drift.openDrifts > 0 ? "text-red-400" : "text-emerald-400",
             },
           ]
         : [],
@@ -234,21 +209,14 @@ export default function DashboardPage() {
     {
       href: "/tool/executive",
       name: "Executive AI",
-      icon: "🧠",
+      icon: "\u{1F9E0}",
       stats: data
         ? [
-            {
-              label: "Recommendations",
-              value: data.executive.pendingRecommendations,
-              color: "text-purple-400",
-            },
+            { label: "Recommendations", value: data.executive.pendingRecommendations, color: "text-purple-400" },
             {
               label: "Critical Alerts",
               value: data.executive.criticalAlerts,
-              color:
-                data.executive.criticalAlerts > 0
-                  ? "text-red-400"
-                  : "text-emerald-400",
+              color: data.executive.criticalAlerts > 0 ? "text-red-400" : "text-emerald-400",
             },
           ]
         : [],
@@ -256,21 +224,14 @@ export default function DashboardPage() {
     {
       href: "/tool/contracts",
       name: "Data Contracts",
-      icon: "📋",
+      icon: "\u{1F4CB}",
       stats: data
         ? [
-            {
-              label: "Active Contracts",
-              value: data.contracts.activeContracts,
-              color: "text-blue-400",
-            },
+            { label: "Active Contracts", value: data.contracts.activeContracts, color: "text-blue-400" },
             {
               label: "Violations",
               value: data.contracts.violations,
-              color:
-                data.contracts.violations > 0
-                  ? "text-red-400"
-                  : "text-emerald-400",
+              color: data.contracts.violations > 0 ? "text-red-400" : "text-emerald-400",
             },
           ]
         : [],
@@ -278,38 +239,22 @@ export default function DashboardPage() {
     {
       href: "/tool/optimizer",
       name: "Pipeline Optimizer",
-      icon: "⚡",
+      icon: "\u26A1",
       stats: data
         ? [
-            {
-              label: "Applied",
-              value: data.optimizer.appliedSuggestions,
-              color: "text-emerald-400",
-            },
-            {
-              label: "Pending",
-              value: data.optimizer.pendingSuggestions,
-              color: "text-yellow-400",
-            },
+            { label: "Applied", value: data.optimizer.appliedSuggestions, color: "text-emerald-400" },
+            { label: "Pending", value: data.optimizer.pendingSuggestions, color: "text-yellow-400" },
           ]
         : [],
     },
     {
       href: "/tool/pipeline",
       name: "Data Pipelines",
-      icon: "⚙️",
+      icon: "\u2699\uFE0F",
       stats: data
         ? [
-            {
-              label: "Active Pipelines",
-              value: data.pipelines.activePipelines,
-              color: "text-blue-400",
-            },
-            {
-              label: "Recent Runs",
-              value: data.pipelines.recentExecutions,
-              color: "text-cyan-400",
-            },
+            { label: "Active Pipelines", value: data.pipelines.activePipelines, color: "text-blue-400" },
+            { label: "Recent Runs", value: data.pipelines.recentExecutions, color: "text-cyan-400" },
           ]
         : [],
     },
@@ -362,10 +307,10 @@ export default function DashboardPage() {
             <h3 className="text-white font-semibold mb-4">Quick Access</h3>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { href: "/tool/nlq", label: "Query in English", icon: "💬" },
-                { href: "/tool/federated", label: "Federated Query", icon: "🌐" },
-                { href: "/tool/lineage", label: "View Lineage", icon: "🔗" },
-                { href: "/tool/fraud", label: "Fraud Dashboard", icon: "🔍" },
+                { href: "/tool/nlq", label: "Query in English", icon: "\u{1F4AC}" },
+                { href: "/tool/federated", label: "Federated Query", icon: "\u{1F310}" },
+                { href: "/tool/lineage", label: "View Lineage", icon: "\u{1F517}" },
+                { href: "/tool/fraud", label: "Fraud Dashboard", icon: "\u{1F50D}" },
               ].map((link) => (
                 <Link
                   key={link.href}

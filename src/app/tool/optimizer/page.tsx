@@ -72,7 +72,7 @@ export default function OptimizerPage() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <StatCard title="Total Cost" value={`$${totalCost.toFixed(2)}`} color="amber" />
+        <StatCard title="Total Cost" value={`$${totalCost.toFixed(2)}`} color="orange" />
         <StatCard title="Optimizations Applied" value={appliedCount} color="emerald" />
         <StatCard title="Pending Suggestions" value={pendingCount} color="yellow" />
         <StatCard title="Queries Profiled" value={profiles.length} color="blue" />

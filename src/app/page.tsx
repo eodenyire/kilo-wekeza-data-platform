@@ -12,10 +12,16 @@ export default function Home() {
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            href="/pitch"
+            href="/dashboard"
             className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-lg hover:from-blue-500 hover:to-cyan-400 transition-all"
           >
-            View Investor Pitch Deck
+            Open Dashboard
+          </Link>
+          <Link
+            href="/pitch"
+            className="px-8 py-4 rounded-xl bg-white/10 text-white font-semibold text-lg hover:bg-white/20 transition-all"
+          >
+            Investor Pitch Deck
           </Link>
         </div>
       </div>

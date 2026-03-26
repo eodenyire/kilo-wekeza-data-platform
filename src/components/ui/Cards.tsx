@@ -6,8 +6,51 @@ interface StatCardProps {
   subtitle?: string;
   icon?: ReactNode;
   trend?: "up" | "down" | "stable";
-  color?: string;
+  color?: "blue" | "cyan" | "emerald" | "yellow" | "orange" | "red" | "purple" | "gray";
 }
+
+const colorMap = {
+  blue: {
+    iconBg: "bg-blue-500/20",
+    iconText: "text-blue-400",
+    valueText: "text-blue-400",
+  },
+  cyan: {
+    iconBg: "bg-cyan-500/20",
+    iconText: "text-cyan-400",
+    valueText: "text-cyan-400",
+  },
+  emerald: {
+    iconBg: "bg-emerald-500/20",
+    iconText: "text-emerald-400",
+    valueText: "text-emerald-400",
+  },
+  yellow: {
+    iconBg: "bg-yellow-500/20",
+    iconText: "text-yellow-400",
+    valueText: "text-yellow-400",
+  },
+  orange: {
+    iconBg: "bg-orange-500/20",
+    iconText: "text-orange-400",
+    valueText: "text-orange-400",
+  },
+  red: {
+    iconBg: "bg-red-500/20",
+    iconText: "text-red-400",
+    valueText: "text-red-400",
+  },
+  purple: {
+    iconBg: "bg-purple-500/20",
+    iconText: "text-purple-400",
+    valueText: "text-purple-400",
+  },
+  gray: {
+    iconBg: "bg-gray-500/20",
+    iconText: "text-gray-400",
+    valueText: "text-gray-400",
+  },
+} as const;
 
 export function StatCard({
   title,
@@ -17,6 +60,7 @@ export function StatCard({
   trend,
   color = "blue",
 }: StatCardProps) {
+  const colors = colorMap[color] || colorMap.blue;
   const trendIcon =
     trend === "up" ? "↑" : trend === "down" ? "↓" : trend === "stable" ? "→" : "";
 
@@ -25,13 +69,13 @@ export function StatCard({
       <div className="flex items-start justify-between mb-3">
         <span className="text-white/50 text-sm font-medium">{title}</span>
         {icon && (
-          <div className={`w-8 h-8 rounded-lg bg-${color}-500/20 flex items-center justify-center text-${color}-400`}>
+          <div className={`w-8 h-8 rounded-lg ${colors.iconBg} flex items-center justify-center ${colors.iconText}`}>
             {icon}
           </div>
         )}
       </div>
       <div className="flex items-end gap-2">
-        <span className={`text-2xl font-bold text-${color}-400`}>{value}</span>
+        <span className={`text-2xl font-bold ${colors.valueText}`}>{value}</span>
         {trend && (
           <span
             className={`text-sm mb-1 ${
