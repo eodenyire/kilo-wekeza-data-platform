@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Next.js Template",
-  description: "A minimal Next.js starter template",
+  title: "Wekeza Data Platform",
+  description: "From Data Silos to Global Intelligence — An end-to-end data ecosystem for enterprises",
 };
 
 export default function RootLayout({
